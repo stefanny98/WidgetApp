@@ -1,10 +1,12 @@
 package com.aquino.widgetapp;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 
 import android.appwidget.AppWidgetProvider;
 
 
+import android.content.ComponentName;
 import android.content.Context;
 
 import android.content.Intent;
@@ -12,18 +14,96 @@ import android.content.Intent;
 import android.net.Uri;
 
 
+import android.util.Log;
 import android.widget.RemoteViews;
 
 public class MyWidgetProvider extends AppWidgetProvider {
 
+    public static final String TOAST_ACTION = "";
+    public static final String EXTRA_ITEM = "android.appwidget.action.EXTRA_ITEM";
+
+    public static final String UPDATE_MEETING_ACTION = "android.appwidget.action.APPWIDGET_UPDATE";
+
+
+
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+
+        AppWidgetManager mgr = AppWidgetManager.getInstance(context);
+
+        if (intent.getAction().equals(UPDATE_MEETING_ACTION)) {
+
+            int appWidgetIds[] = mgr.getAppWidgetIds(new ComponentName(context,MyWidgetProvider.class));
+
+            Log.e("received", intent.getAction());
+
+            mgr.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.listViewWidget);
+
+        }
+
+        super.onReceive(context, intent);
+
+    }
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager,
+
+                         int[] appWidgetIds) {
+
+
+
+        // update each of the app widgets with the remote adapter
+
+        for (int i = 0; i < appWidgetIds.length; ++i) {
+
+
+
+
+
+            Intent intent = new Intent(context, WidgetService.class);
+
+
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
+
+            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+
+
+
+            RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_main);
+
+
+
+            rv.setRemoteAdapter(appWidgetIds[i], R.id.listViewWidget, intent);
+
+
+
+            Intent startActivityIntent = new Intent(context,MainActivity.class);
+
+            PendingIntent startActivityPendingIntent = PendingIntent.getActivity(context, 0, startActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            rv.setPendingIntentTemplate(R.id.listViewWidget, startActivityPendingIntent);
+
+
+
+            rv.setEmptyView(R.id.listViewWidget, R.id.empty_view);
+
+
+            appWidgetManager.updateAppWidget(appWidgetIds[i], rv);
+
+        }
+
+        super.onUpdate(context, appWidgetManager, appWidgetIds);
+
+    }
+
+}
+
+/*
     @Override
     public void onUpdate(Context context, AppWidgetManager
             appWidgetManager,int[] appWidgetIds) {
 
-/*int[] appWidgetIds holds ids of multiple instance
- * of your widget
- * meaning you are placing more than one widgets on
- * your homescreen*/
         final int N = appWidgetIds.length;
         for (int i = 0; i < N; ++i) {
             RemoteViews remoteViews = updateWidgetListView(context,
@@ -31,6 +111,8 @@ public class MyWidgetProvider extends AppWidgetProvider {
             appWidgetManager.updateAppWidget(appWidgetIds[i],
                     remoteViews);
         }
+
+
         super.onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
@@ -58,5 +140,5 @@ public class MyWidgetProvider extends AppWidgetProvider {
         remoteViews.setEmptyView(R.id.listViewWidget, R.id.empty_view);
         return remoteViews;
     }
+*/
 
-}
